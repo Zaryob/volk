@@ -140,7 +140,7 @@ file(TO_CMAKE_PATH ${VOLK_PYTHON_DIR} VOLK_PYTHON_DIR)
 # Usage: VOLK_UNIQUE_TARGET(<description> <dependencies list>)
 ########################################################################
 function(VOLK_UNIQUE_TARGET desc)
-    file(RELATIVE_PATH reldir ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+    file(RELATIVE_PATH reldir ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR})
     execute_process(
         COMMAND ${PYTHON_EXECUTABLE} -c "import re, hashlib
 unique = hashlib.sha256(b'${reldir}${ARGN}').hexdigest()[:5]
@@ -259,3 +259,16 @@ function(VOLK_PYTHON_INSTALL)
     volk_unique_target("pygen" ${python_install_gen_targets})
 
 endfunction(VOLK_PYTHON_INSTALL)
+
+########################################################################
+# Write the python helper script that generates byte code files
+########################################################################
+file(
+    WRITE ${CMAKE_BINARY_DIR}/python_compile_helper.py
+    "
+import sys, py_compile
+files = sys.argv[1:]
+srcs, gens = files[:len(files)//2], files[len(files)//2:]
+for src, gen in zip(srcs, gens):
+    py_compile.compile(file=src, cfile=gen, doraise=True)
+")
